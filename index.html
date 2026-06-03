@@ -917,17 +917,10 @@
         <div class="loader-spinner"></div>
         <div class="loader-title">แบบเสนอชื่อนักส่งเสริมสหกรณ์ดีเด่น ปี 2569</div>
         <div class="loader-subtitle">นางสาวชไมพร มาตย์คำมี</div>
-        
-        <div id="loadingProgressGroup">
-            <div class="progress-bar-container">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="progress-percent" id="progressPercent">0%</div>
+        <div class="progress-bar-container">
+            <div class="progress-fill" id="progressFill"></div>
         </div>
-        
-        <button id="btnStartReading" style="display: none;" class="btn-start-reading">
-            🎵 เริ่มเปิดอ่านเอกสาร (เปิดเสียงเพลง)
-        </button>
+        <div class="progress-percent" id="progressPercent">0%</div>
     </div>
 
     <!-- Main Flex Layout Wrapper (sidebar-left-active open by default on startup!) -->
@@ -1382,99 +1375,87 @@
             loadingBar.style.width = '100%';
             loadingPercent.innerText = '100%';
 
-            // Show "Start Reading" button to trigger audio playback under explicit user gesture (crucial for LINE/mobile webviews)
-            const progressGroup = document.getElementById('loadingProgressGroup');
-            const startBtn = document.getElementById('btnStartReading');
-            
-            const proceedToBook = () => {
-                // Try to unmute and play background music immediately on this click gesture
-                const music = document.getElementById('bgMusic');
-                if (music) {
-                    music.muted = false;
+            // Try to unmute and play background music immediately
+            const music = document.getElementById('bgMusic');
+            if (music) {
+                music.muted = false;
+                music.play().then(() => {
+                    musicPlaying = true;
+                    document.getElementById('musicOnIcon').style.display = 'block';
+                    document.getElementById('musicOffIcon').style.display = 'none';
+                    document.getElementById('btnMusic').title = 'ปิดเพลงประกอบ';
+                }).catch(err => {
+                    console.log("Unmuted autoplay failed, trying muted autoplay fallback...", err);
+                    // Fallback to muted autoplay
+                    music.muted = true;
                     music.play().then(() => {
-                        musicPlaying = true;
-                        document.getElementById('musicOnIcon').style.display = 'block';
-                        document.getElementById('musicOffIcon').style.display = 'none';
-                        document.getElementById('btnMusic').title = 'ปิดเพลงประกอบ';
-                    }).catch(err => {
-                        console.warn("Unmuted playback failed: ", err);
-                    });
+                        // Muted autoplay playing successfully
+                    }).catch(e => console.log("Muted autoplay blocked: ", e));
+                });
+            }
+
+            // Proceed to hide the loader screen automatically (instant transition for fastest loading!)
+            const loader = document.getElementById('loading');
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                bookElement.style.display = 'block';
+                
+                // If mobile screen, close the default sidebar on load so book is visible
+                if (window.innerWidth <= 768) {
+                    const layout = document.getElementById('appLayout');
+                    const sbLeft = document.getElementById('sidebarLeft');
+                    if (layout) layout.classList.remove('sidebar-left-active');
+                    if (sbLeft) sbLeft.classList.remove('active');
                 }
                 
-                // Mark as interacted to stop the fallback listeners
-                hasInteractedForMusic = true;
+                pageFlipInstance = new St.PageFlip(bookElement, {
+                    width: Math.round(basePageWidth),
+                    height: Math.round(basePageHeight),
+                    size: "stretch",
+                    minWidth: 280,
+                    maxWidth: 1200,
+                    minHeight: 380,
+                    maxHeight: 1600,
+                    maxShadowOpacity: 0.45,
+                    showCover: true,
+                    mobileScrollSupport: false
+                });
 
-                // Proceed to hide the loader screen
-                const loader = document.getElementById('loading');
-                loader.style.opacity = '0';
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                    bookElement.style.display = 'block';
-                    
-                    // If mobile screen, close the default sidebar on load so book is visible
-                    if (window.innerWidth <= 768) {
-                        const layout = document.getElementById('appLayout');
-                        const sbLeft = document.getElementById('sidebarLeft');
-                        if (layout) layout.classList.remove('sidebar-left-active');
-                        if (sbLeft) sbLeft.classList.remove('active');
-                    }
-                    
-                    pageFlipInstance = new St.PageFlip(bookElement, {
-                        width: Math.round(basePageWidth),
-                        height: Math.round(basePageHeight),
-                        size: "stretch",
-                        minWidth: 280,
-                        maxWidth: 1200,
-                        minHeight: 380,
-                        maxHeight: 1600,
-                        maxShadowOpacity: 0.45,
-                        showCover: true,
-                        mobileScrollSupport: false
+                pageFlipInstance.loadFromHTML(document.querySelectorAll('.page'));
+                resizeBook();
+
+                // Double click to zoom in
+                const container = document.querySelector('.book-container');
+                if (container) {
+                    container.addEventListener('dblclick', () => {
+                        openZoomModal();
                     });
+                    initMobileTapNavigation();
+                }
 
-                    pageFlipInstance.loadFromHTML(document.querySelectorAll('.page'));
+                // On flip, trigger lazy rendering for surrounding pages!
+                pageFlipInstance.on('flip', (e) => {
+                    currentPage = e.data + 1;
+                    document.getElementById('pageNumberInput').value = currentPage;
+                    syncActiveThumbnail();
+                    playSwooshSound();
+                    
+                    // Render current page, next page, and previous page on demand
+                    renderPage(currentPage);
+                    renderPage(currentPage - 1);
+                    renderPage(currentPage + 1);
+                    renderPage(currentPage + 2); // for spreads
+                });
+
+                pageFlipInstance.on('changeOrientation', (e) => {
                     resizeBook();
+                });
 
-                    // Double click to zoom in
-                    const container = document.querySelector('.book-container');
-                    if (container) {
-                        container.addEventListener('dblclick', () => {
-                            openZoomModal();
-                        });
-                        initMobileTapNavigation();
-                    }
-
-                    // On flip, trigger lazy rendering for surrounding pages!
-                    pageFlipInstance.on('flip', (e) => {
-                        currentPage = e.data + 1;
-                        document.getElementById('pageNumberInput').value = currentPage;
-                        syncActiveThumbnail();
-                        playSwooshSound();
-                        
-                        // Render current page, next page, and previous page on demand
-                        renderPage(currentPage);
-                        renderPage(currentPage - 1);
-                        renderPage(currentPage + 1);
-                        renderPage(currentPage + 2); // for spreads
-                    });
-
-                    pageFlipInstance.on('changeOrientation', (e) => {
-                        resizeBook();
-                    });
-
-                    // Run the text indexing process asynchronously in background (won't freeze screen!)
-                    backgroundIndexing();
-                    initMusicAutoplay();
-                }, 300);
-            };
-
-            if (progressGroup) progressGroup.style.display = 'none';
-            if (startBtn) {
-                startBtn.style.display = 'inline-flex';
-                startBtn.onclick = proceedToBook;
-            } else {
-                proceedToBook();
-            }
+                // Run the text indexing process asynchronously in background (won't freeze screen!)
+                backgroundIndexing();
+                initMusicAutoplay();
+            }, 300);
         }
 
         // Mathematical aspect ratio fitting calculation to completely prevent page overflowing!
