@@ -1089,11 +1089,8 @@
         </div>
     </div>
 
-    <!-- Background Music Audio Element -->
-    <audio id="bgMusic" src="sound.mp3" loop preload="auto"></audio>
-
-    <!-- Load the pre-encoded PDF Base64 string fallback -->
-    <script src="pdf_data.js"></script>
+    <!-- Background Music Audio Element (preload="none" to prevent blocking initial load) -->
+    <audio id="bgMusic" src="sound.mp3" loop preload="none"></audio>
 
     <script>
         // Global variables & setups
@@ -1279,6 +1276,16 @@
             loadingPercent.innerText = '60%';
 
             if (!loadedDirectly) {
+                // Dynamically load pdf_data.js only if local fetch fails (e.g. running offline via file://)
+                console.log("Loading pdf_data.js dynamically...");
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'pdf_data.js';
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error("Failed to load pdf_data.js"));
+                    document.body.appendChild(script);
+                });
+
                 if (typeof pdfBase64 === 'undefined') {
                     throw new Error("PDF Base64 data variable is not loaded. Ensure pdf_data.js is present.");
                 }
