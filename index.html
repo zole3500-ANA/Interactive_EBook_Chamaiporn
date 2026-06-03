@@ -1089,8 +1089,8 @@
         </div>
     </div>
 
-    <!-- Background Music Audio Element (preload="metadata" for mobile support) -->
-    <audio id="bgMusic" src="sound.mp3" loop preload="metadata"></audio>
+    <!-- Background Music Audio Element (preload="auto" and autoplay/muted for bypass-autoplay support) -->
+    <audio id="bgMusic" src="sound.mp3" loop autoplay muted preload="auto"></audio>
 
     <script>
         // Global variables & setups
@@ -1568,12 +1568,17 @@
             document.getElementById('soundOffIcon').style.display = soundEnabled ? 'none' : 'block';
         }
 
+        let hasInteractedForMusic = false;
+
         // Toggle Background Music
         function toggleMusic() {
             const music = document.getElementById('bgMusic');
             const onIcon = document.getElementById('musicOnIcon');
             const offIcon = document.getElementById('musicOffIcon');
             const btn = document.getElementById('btnMusic');
+            
+            hasInteractedForMusic = true;
+            music.muted = false;
             
             if (!music.paused) {
                 music.pause();
@@ -1595,8 +1600,21 @@
 
         // Auto-play music on first user interaction
         function initMusicAutoplay() {
+            const music = document.getElementById('bgMusic');
+            
+            // Force play muted immediately
+            music.muted = true;
+            music.autoplay = true;
+            music.play().catch(e => console.log("Muted autoplay queued: ", e));
+
             const startMusic = () => {
-                const music = document.getElementById('bgMusic');
+                if (hasInteractedForMusic) {
+                    removeListeners();
+                    return;
+                }
+                hasInteractedForMusic = true;
+                
+                music.muted = false;
                 if (music.paused) {
                     music.play().then(() => {
                         musicPlaying = true;
@@ -1604,13 +1622,23 @@
                         document.getElementById('musicOffIcon').style.display = 'none';
                         document.getElementById('btnMusic').title = 'ปิดเพลงประกอบ';
                     }).catch(err => {
-                        console.log("Autoplay blocked by browser. User must click the music button to start.", err);
+                        console.log("Unmute play failed: ", err);
                     });
+                } else {
+                    musicPlaying = true;
+                    document.getElementById('musicOnIcon').style.display = 'block';
+                    document.getElementById('musicOffIcon').style.display = 'none';
+                    document.getElementById('btnMusic').title = 'ปิดเพลงประกอบ';
                 }
+                removeListeners();
+            };
+            
+            const removeListeners = () => {
                 document.removeEventListener('click', startMusic);
                 document.removeEventListener('keydown', startMusic);
                 document.removeEventListener('touchstart', startMusic);
             };
+
             document.addEventListener('click', startMusic);
             document.addEventListener('keydown', startMusic);
             document.addEventListener('touchstart', startMusic, { passive: true });
