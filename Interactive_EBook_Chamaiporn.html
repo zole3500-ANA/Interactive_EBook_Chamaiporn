@@ -1089,8 +1089,8 @@
         </div>
     </div>
 
-    <!-- Background Music Audio Element (preload="none" to prevent blocking initial load) -->
-    <audio id="bgMusic" src="sound.mp3" loop preload="none"></audio>
+    <!-- Background Music Audio Element (preload="metadata" for mobile support) -->
+    <audio id="bgMusic" src="sound.mp3" loop preload="metadata"></audio>
 
     <script>
         // Global variables & setups
@@ -1609,9 +1609,11 @@
                 }
                 document.removeEventListener('click', startMusic);
                 document.removeEventListener('keydown', startMusic);
+                document.removeEventListener('touchstart', startMusic);
             };
             document.addEventListener('click', startMusic);
             document.addEventListener('keydown', startMusic);
+            document.addEventListener('touchstart', startMusic, { passive: true });
         }
 
         // Fullscreen Toggle controller
