@@ -1090,7 +1090,7 @@
     </div>
 
     <!-- Background Music Audio Element -->
-    <audio id="bgMusic" src="sound.mp3" loop preload="metadata"></audio>
+    <audio id="bgMusic" src="sound.mp3" loop preload="auto"></audio>
 
     <!-- Load the pre-encoded PDF Base64 string fallback -->
     <script src="pdf_data.js"></script>
@@ -1568,7 +1568,7 @@
             const offIcon = document.getElementById('musicOffIcon');
             const btn = document.getElementById('btnMusic');
             
-            if (musicPlaying) {
+            if (!music.paused) {
                 music.pause();
                 musicPlaying = false;
                 onIcon.style.display = 'none';
@@ -1590,7 +1590,7 @@
         function initMusicAutoplay() {
             const startMusic = () => {
                 const music = document.getElementById('bgMusic');
-                if (!musicPlaying) {
+                if (music.paused) {
                     music.play().then(() => {
                         musicPlaying = true;
                         document.getElementById('musicOnIcon').style.display = 'block';
