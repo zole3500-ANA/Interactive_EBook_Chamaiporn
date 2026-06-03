@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Book แบบเสนอชื่อนักส่งเสริมดีเด่น - ชไมพร มาตย์คำมี</title>
+    
+    <!-- Google Fonts: Inter & Sarabun for gorgeous Thai-English typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+
+    <!-- pdf.js สำหรับประมวลผล PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- StPageFlip สำหรับเปิดหน้าหนังสือ 3D -->
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+    
+    <style>
+        /* CSS Variables - Premium Color Systems (Midnight Slate & Gold accent) */
+        :root {
+            --bg-gradient: radial-gradient(circle, #2a3447 0%, #0f172a 100%);
+            --accent-color: #d4af37; /* Metallic Gold */
+            --accent-hover: #f1c40f;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --glass-bg: rgba(15, 23, 42, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --sidebar-width: 320px;
+        }
+
+        /* Walnut Theme overrides */
+        [data-theme="walnut"] {
+            --bg-gradient: radial-gradient(circle, #3e2723 0%, #1a0c00 100%);
+            --accent-color: #ffb300;
+            --accent-hover: #ffe082;
+            --glass-bg: rgba(43, 24, 6, 0.7);
+        }
+
+        /* Royal Emerald Theme overrides */
+        [data-theme="emerald"] {
+            --bg-gradient: radial-gradient(circle, #064e3b 0%, #022c22 100%);
+            --accent-color: #fbbf24;
+            --accent-hover: #fef08a;
+            --glass-bg: rgba(2, 44, 34, 0.7);
+        }
+
+        /* Clean Alabaster Theme overrides */
+        [data-theme="alabaster"] {
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+            --accent-color: #0f172a;
+            --accent-hover: #334155;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(15, 23, 42, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        /* Main App Layout Wrapper */
+        .app-layout {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Main Workspace holding Book and Controls */
+        .main-workspace {
+            flex: 1;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Loading Screen Style */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loader-spinner {
+            width: 80px;
+            height: 80px;
+            border: 6px solid rgba(212, 175, 55, 0.15);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loader-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .loader-subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar-container {
+            width: 240px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #d4af37, #f1c40f);
+            border-radius: 3px;
+            transition: width 0.2s ease;
+        }
+
+        .progress-percent {
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* Flipbook Container holding the canvases - constrained dynamically */
+        .book-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .flip-book {
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65);
+            display: none;
+            border-radius: 6px;
+            background-color: #fff;
+            perspective: 2000px;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        /* 3D Realistic Crease Shadows */
+        .page {
+            background-color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .page canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Inner creasing effects */
+        .page::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 35px;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* Left pages shadow (on the right edge) */
+        .page:nth-child(even)::after {
+            right: 0;
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.03) 40%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        /* Right pages shadow (on the left edge) */
+        .page:nth-child(odd)::after {
+            left: 0;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.03) 40%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        /* Outer book page border highlights */
+        .page::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(0, 0, 0, 0.08);
+            z-index: 21;
+        }
+        .page:nth-child(even)::before { right: 0; }
+        .page:nth-child(odd)::before { left: 0; }
+
+        /* Hard covers */
+        .page.hard-cover {
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        /* Control Panel - Glassmorphic Bottom Toolbar (Static Flex layout to avoid book overlap) */
+        .control-bar {
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            box-shadow: var(--glass-shadow);
+            z-index: 100;
+            max-width: 95vw;
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex-shrink: 0;
+        }
+
+        .control-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .btn-control {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .btn-control:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .btn-control:active {
+            transform: scale(0.95);
+        }
+
+        .control-divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+
+        /* Page indicator text box */
+        .page-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 0 8px;
+            color: var(--text-primary);
+        }
+
+        .page-indicator input {
+            width: 44px;
+            height: 26px;
+            border-radius: 4px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.25);
+            color: var(--accent-color);
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .page-indicator input::-webkit-outer-spin-button,
+        .page-indicator input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Tooltip text styling */
+        .btn-control::before {
+            content: attr(title);
+            position: absolute;
+            bottom: 48px;
+            background: rgba(15, 23, 42, 0.95);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .btn-control:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Side drawers - Glassmorphic */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            height: 100dvh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            border-right: 1px solid var(--glass-border);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-right {
+            right: 0;
+            left: auto;
+            border-right: none;
+            border-left: 1px solid var(--glass-border);
+            transform: translateX(100%);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-right.active {
+            transform: translateX(0);
+        }
+
+        /* On Desktop (769px and above): active sidebars dock and push contents, preserving full book responsiveness! */
+        @media (min-width: 769px) {
+            .app-layout.sidebar-left-active #sidebarLeft {
+                position: relative;
+                transform: translateX(0);
+                z-index: 100;
+                box-shadow: none;
+            }
+            
+            .app-layout.sidebar-right-active #sidebarRight {
+                position: relative;
+                transform: translateX(0);
+                z-index: 100;
+                box-shadow: none;
+            }
+
+            .app-layout.sidebar-help-active #sidebarHelp {
+                position: relative;
+                transform: translateX(0);
+                z-index: 100;
+                box-shadow: none;
+            }
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 0;
+        }
+
+        .btn-close-sidebar {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .btn-close-sidebar:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Drawer Tab system */
+        .sidebar-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Custom Scrollbar for sidebars */
+        .tab-content::-webkit-scrollbar,
+        .search-results::-webkit-scrollbar {
+            width: 4px;
+        }
+        .tab-content::-webkit-scrollbar-thumb,
+        .search-results::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+        }
+
+        /* TOC list styling */
+        .toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc-item {
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .toc-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+
+        .toc-title {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .toc-page {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 12px;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        /* Thumbnail grid styling */
+        .thumb-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .thumb-item {
+            background: rgba(0, 0, 0, 0.15);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 6px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.25s ease;
+        }
+
+        .thumb-item:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .thumb-item.active {
+            border-color: var(--accent-color);
+            background: rgba(212, 175, 55, 0.08);
+        }
+
+        .thumb-item canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: white;
+        }
+
+        .thumb-page {
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Search Sidebar layout */
+        .search-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 0 40px 0 16px;
+            color: #fff;
+            outline: none;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-search-trigger {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .search-status {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .search-item {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .search-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .search-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .search-item-page {
+            color: var(--accent-color);
+        }
+
+        .search-item-snippet {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .search-item-snippet mark {
+            background: rgba(212, 175, 55, 0.3);
+            color: #fff;
+            border-radius: 2px;
+            padding: 0 2px;
+            font-weight: bold;
+        }
+
+        /* High-Res Vector Zoom Overlay */
+        .zoom-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 15, 30, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 10002;
+        }
+
+        .btn-zoom-act {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-zoom-act:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--accent-color);
+        }
+
+        .zoom-value {
+            font-size: 14px;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .zoom-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 20px 20px 20px;
+            cursor: grab;
+        }
+
+        .zoom-container.grabbing {
+            cursor: grabbing;
+        }
+
+        #zoomCanvas {
+            max-width: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            background: #fff;
+            transform-origin: center center;
+            transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+
+        #qrcode {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        #qrcode img {
+            display: block;
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #d4af37, #b28d25);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-modal-close {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text-secondary);
+        }
+
+        .btn-modal-close:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        /* Help panel Overlay */
+        .help-content {
+            line-height: 1.6;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .help-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .help-key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #fff;
+        }
+
+        /* Ambient glow animation behind book */
+        .ambient-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0) 70%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Responsive adaptations */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+            .main-workspace {
+                padding-bottom: 80px;
+            }
+            .book-container {
+                padding: 10px;
+            }
+            .control-bar {
+                bottom: 10px;
+                gap: 2px;
+                padding: 6px 10px;
+            }
+            .btn-control {
+                width: 32px;
+                height: 32px;
+            }
+            .control-divider {
+                height: 14px;
+            }
+            .page-indicator {
+                font-size: 12px;
+            }
+            .page-indicator input {
+                width: 36px;
+                height: 22px;
+                font-size: 12px;
+            }
+            .btn-control::before {
+                display: none; /* Hide tooltips on touch devices */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Stunning Premium Loader Screen -->
+    <div id="loading">
+        <div class="loader-spinner"></div>
+        <div class="loader-title">แบบเสนอชื่อนักส่งเสริมสหกรณ์ดีเด่น ปี 2569</div>
+        <div class="loader-subtitle">นางสาวชไมพร มาตย์คำมี</div>
+        <div class="progress-bar-container">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-percent" id="progressPercent">0%</div>
+    </div>
+
+    <!-- Main Flex Layout Wrapper (sidebar-left-active open by default on startup!) -->
+    <div class="app-layout sidebar-left-active" id="appLayout">
+        <!-- Ambient background light -->
+        <div class="ambient-glow"></div>
+
+        <!-- LEFT SIDEBAR: Document Center (TOC & Thumbnails) (active/visible by default on startup!) -->
+        <div class="sidebar active" id="sidebarLeft">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">เมนูเอกสาร</h3>
+                <button class="btn-close-sidebar" onclick="toggleSidebar('Left')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" onclick="switchTab('TOC')">📖 สารบัญ</button>
+                <button class="tab-btn" onclick="switchTab('Thumbs')">🖼️ ภาพหน้าจอ</button>
+            </div>
+            <!-- Tab 1: TOC -->
+            <div class="tab-content active" id="tabTOC">
+                <ul class="toc-list" id="tocContainer">
+                    <!-- Dynamically generated Table of Contents items go here -->
+                </ul>
+            </div>
+            <!-- Tab 2: Thumbnails -->
+            <div class="tab-content" id="tabThumbs">
+                <div class="thumb-grid" id="thumbContainer">
+                    <!-- Dynamically generated page thumbnails go here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN WORKSPACE -->
+        <div class="main-workspace">
+            <!-- Flipbook Workspace -->
+            <div class="book-container">
+                <div class="flip-book" id="book">
+                    <!-- Pages will be dynamically rendered into canvases and injected here -->
+                </div>
+            </div>
+
+            <!-- Glassmorphic Control Bar (Permanently centered at the bottom of main workspace) -->
+            <div class="control-bar" id="controlBar">
+                <!-- Sidebar Document Center Trigger -->
+                <button class="btn-control" title="เมนูสารบัญและรูปภาพ" onclick="toggleSidebar('Left')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                </button>
+                
+                <!-- Search Trigger -->
+                <button class="btn-control" title="ค้นหาคำศัพท์" onclick="toggleSidebar('Right')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
+
+                <div class="control-divider"></div>
+
+                <!-- Navigation Buttons -->
+                <button class="btn-control" title="หน้าแรกสุด" onclick="navFirstPage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/></svg>
+                </button>
+                
+                <button class="btn-control" title="หน้าก่อนหน้า" onclick="navPrevPage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+
+                <!-- Page Indicator Input -->
+                <div class="page-indicator">
+                    <input type="number" id="pageNumberInput" value="1" min="1" onchange="handlePageInputChange(this)" onfocus="this.select()">
+                    <span>/</span>
+                    <span id="totalPagesText">0</span>
+                </div>
+
+                <button class="btn-control" title="หน้าถัดไป" onclick="navNextPage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+
+                <button class="btn-control" title="หน้าสุดท้าย" onclick="navLastPage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 17 5-5-5-5M6 17l5-5-5-5"/></svg>
+                </button>
+
+                <div class="control-divider"></div>
+
+                <!-- Autoplay (Play/Pause) -->
+                <button class="btn-control" id="btnAutoplay" title="เล่นอัตโนมัติ" onclick="toggleAutoplay()">
+                    <svg id="playIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 9-14 9V3z"/></svg>
+                    <svg id="pauseIcon" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
+                </button>
+
+                <!-- Sound Toggle -->
+                <button class="btn-control" id="btnSound" title="เสียงเปลี่ยนหน้า" onclick="toggleSound()">
+                    <svg id="soundOnIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                    <svg id="soundOffIcon" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+                </button>
+
+                <!-- Dynamic Vector Zoom Tool -->
+                <button class="btn-control" title="ซูมขยายคมชัด" onclick="openZoomModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>
+                </button>
+
+                <!-- Theme Selector (Cycles themes) -->
+                <button class="btn-control" title="เปลี่ยนโทนสีพื้นหลัง" onclick="cycleTheme()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.886H3.894l4.947 3.593L6.93 18.366 12 14.773l5.07 3.593-1.912-5.887 4.947-3.593h-6.194L12 3z"/></svg>
+                </button>
+
+                <div class="control-divider"></div>
+
+                <!-- Share & QR -->
+                <button class="btn-control" title="แชร์เล่มนี้" onclick="openShareModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                </button>
+
+                <!-- PDF Download -->
+                <button class="btn-control" title="ดาวน์โหลดไฟล์ PDF ต้นฉบับ" onclick="downloadOriginalPDF()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                </button>
+
+                <!-- Fullscreen Toggle -->
+                <button class="btn-control" title="แสดงผลเต็มจอ" onclick="toggleFullscreen()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                </button>
+
+                <!-- Help Info Trigger -->
+                <button class="btn-control" title="คีย์บอร์ดและข้อมูลช่วยเหลือ" onclick="toggleSidebar('Help')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR: Search Engine -->
+        <div class="sidebar sidebar-right" id="sidebarRight">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">🔍 ค้นหาคำในเอกสาร</h3>
+                <button class="btn-close-sidebar" onclick="toggleSidebar('Right')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; padding:16px;">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="พิมพ์คำที่ต้องการค้นหา..." onkeyup="handleSearchKeyUp(event)">
+                    <button class="btn-search-trigger" onclick="performSearch()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </button>
+                </div>
+                <div class="search-status" id="searchStatus">กรอกคำค้นหาด้านบน</div>
+                <div class="search-results" id="searchResults">
+                    <!-- Search results injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- HELP SIDEBAR -->
+        <div class="sidebar sidebar-right" id="sidebarHelp">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title">⌨️ คีย์บอร์ดและช่วยเหลือ</h3>
+                <button class="btn-close-sidebar" onclick="toggleSidebar('Help')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div style="flex:1; padding:20px;" class="help-content">
+                <h4>ทางลัดคีย์บอร์ด (Shortcuts)</h4>
+                <div class="help-item"><span>หน้าถัดไป</span><span class="help-key">➡ / Spacebar</span></div>
+                <div class="help-item"><span>หน้าก่อนหน้า</span><span class="help-key">⬅</span></div>
+                <div class="help-item"><span>หน้าแรกสุด</span><span class="help-key">Home</span></div>
+                <div class="help-item"><span>หน้าสุดท้าย</span><span class="help-key">End</span></div>
+                <div class="help-item"><span>ซูมเข้า / ซูมออก</span><span class="help-key">Scroll / Double click</span></div>
+                <br>
+                <h4>เกี่ยวกับเอกสาร</h4>
+                <p>แบบเสนอชื่อเพื่อพิจารณาคัดเลือกข้าราชการพลเรือนดีเด่น ประจำปี พ.ศ. 2569 ประเภทนักส่งเสริมสหกรณ์ดีเด่น - นางสาวชไมพร มาตย์คำมี สำนักงานสหกรณ์จังหวัดกาฬสินธุ์</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- VECTOR ZOOM MODAL OVERLAY -->
+    <div id="zoomOverlay" class="zoom-overlay">
+        <div class="zoom-controls">
+            <button class="btn-zoom-act" onclick="zoomAdjust(-0.35)" title="Zoom Out">➖</button>
+            <span class="zoom-value" id="zoomValueText">100%</span>
+            <button class="btn-zoom-act" onclick="zoomAdjust(0.35)" title="Zoom In">➕</button>
+            <button class="btn-zoom-act" onclick="zoomReset()" title="Reset Zoom">🔄</button>
+            <div class="control-divider" style="background:rgba(255,255,255,0.2);"></div>
+            <button class="btn-zoom-act" onclick="closeZoomModal()" title="Close" style="color:#ef4444;">❌</button>
+        </div>
+        <div class="zoom-container" id="zoomContainer">
+            <canvas id="zoomCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- SHARE MODAL -->
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal-card">
+            <h3 class="modal-title">🔗 แชร์หนังสือ E-Book</h3>
+            <div id="qrcode"></div>
+            <div id="shareWarning" style="display:none; font-size:12px; color:#ffb300; margin-bottom:15px; line-height:1.4; text-align:center;">
+                ⚠️ เนื่องจากเปิดอ่านไฟล์แบบออฟไลน์ (Local File)<br>
+                ลิงก์นี้จะแชร์ให้เครื่องอื่นสแกนได้หลังจากอัปโหลดขึ้น Web Server แล้วเท่านั้น
+            </div>
+            <button class="btn-modal" onclick="copyLink()">📋 คัดลอกลิงก์ข้อมูล</button>
+            <button class="btn-modal btn-modal-close" onclick="closeShareModal()">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <!-- Load the pre-encoded PDF Base64 string fallback -->
+    <script src="pdf_data.js"></script>
+
+    <script>
+        // Global variables & setups
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        
+        let pdfInstance = null;
+        let pageFlipInstance = null;
+        let totalPages = 0;
+        let currentPage = 1;
+        let isAutoplayActive = false;
+        let autoplayTimer = null;
+        let soundEnabled = true;
+        let currentThemeIndex = 0;
+        const themes = ['midnight', 'walnut', 'emerald', 'alabaster'];
+        
+        // Base viewport dimensions for aspect ratio mapping
+        let basePageWidth = 595;
+        let basePageHeight = 842;
+
+        // Full text search database
+        const pageSearchIndex = [];
+        const renderedPages = new Set();
+
+        // Fail-safe default page mapping in case dynamic OCR detects spaces or font shifts!
+        const tocRules = [
+            { title: "📖 หน้าปก", pattern: null, pageNum: 1 },
+            { title: "📝 คำนำ", pattern: null, pageNum: 2 },
+            { title: "📋 สารบัญ", pattern: null, pageNum: 3 },
+            { title: "1. ชื่อ-สกุล", pattern: /[1๑]\.\s*(ชื่อ|สกุล)/i, pageNum: 4 },
+            { title: "2. ประวัติส่วนตัว", pattern: /[2๒]\.\s*ประวัติส่วนตัว/i, pageNum: 4 },
+            { title: "3. ประวัติการศึกษา", pattern: /[3๓]\.\s*ประวัติการศึกษา/i, pageNum: 4 },
+            { title: "4. ประวัติการทำงาน", pattern: /[4๔]\.\s*ประวัติการทำงาน/i, pageNum: 5 },
+            { title: "5. รางวัลหรือประกาศเกียรติคุณ", pattern: /[5๕]\.\s*รางวัลหรือประกาศเกียรติคุณ/i, pageNum: 6 },
+            { title: "6. การครองงาน", pattern: /[6๖]\.\s*การครองงาน/i, pageNum: 10 },
+            { title: "7. การครองตน", pattern: /[7๗]\.\s*การครองตน/i, pageNum: 23 },
+            { title: "8. การครองคน", pattern: /[8๘]\.\s*การครองคน/i, pageNum: 31 }
+        ];
+
+        // Decodes base64 string to binary Uint8Array
+        function base64ToUint8Array(base64) {
+            const raw = atob(base64);
+            const uint8Array = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; i++) {
+                uint8Array[i] = raw.charCodeAt(i);
+            }
+            return uint8Array;
+        }
+
+        // Play page turn sound synthesized client-side with Web Audio API
+        function playSwooshSound() {
+            if (!soundEnabled) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const bufferSize = audioCtx.sampleRate * 0.35;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.Q.value = 4.0;
+                filter.frequency.setValueAtTime(1300, audioCtx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.3);
+
+                const gain = audioCtx.createGain();
+                gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.33);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                noise.start();
+                setTimeout(() => {
+                    audioCtx.close();
+                }, 400);
+            } catch (err) {
+                console.warn("Web Audio API blocked: ", err);
+            }
+        }
+
+        // Lazy rendering engine for ultra-fast startup (under 1 second!)
+        async function renderPage(pageNum) {
+            if (pageNum < 1 || pageNum > totalPages) return;
+            if (renderedPages.has(pageNum)) return;
+            renderedPages.add(pageNum);
+            
+            try {
+                const page = await pdfInstance.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 2.0 }); 
+                
+                const canvas = document.getElementById(`canvas-page-${pageNum}`);
+                if (!canvas) return;
+                
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const context = canvas.getContext('2d');
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                await page.render(renderContext).promise;
+                
+                // Draw thumbnail once the page canvas is ready in background
+                const thumbItem = document.getElementById(`thumb-page-${pageNum}`);
+                if (thumbItem) {
+                    const thumbCanvas = thumbItem.querySelector('canvas');
+                    if (thumbCanvas) {
+                        const thumbCtx = thumbCanvas.getContext('2d');
+                        thumbCtx.drawImage(canvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+                    }
+                }
+            } catch (err) {
+                console.error(`Error lazy rendering page ${pageNum}: `, err);
+                renderedPages.delete(pageNum); // retry on next attempt
+            }
+        }
+
+        // Background indexing process to make search and dynamic TOC fast
+        async function backgroundIndexing() {
+            const matchedRuleIndices = new Set();
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                try {
+                    const page = await pdfInstance.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    
+                    pageSearchIndex.push({
+                        pageNum: pageNum,
+                        text: pageText
+                    });
+
+                    // Auto-detect dynamic TOC positions (updates default fail-safe ones if match found!)
+                    if (pageNum >= 4) {
+                        tocRules.forEach((rule, idx) => {
+                            if (rule.pattern && !matchedRuleIndices.has(idx) && rule.pattern.test(pageText)) {
+                                rule.pageNum = pageNum;
+                                matchedRuleIndices.add(idx);
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.warn(`Error indexing page ${pageNum}: `, e);
+                }
+            }
+            buildTOCUI();
+        }
+
+        // Initialize PDF rendering and build flipbook canvas objects
+        async function initFlipbook() {
+            const loadingBar = document.getElementById('progressFill');
+            const loadingPercent = document.getElementById('progressPercent');
+            
+            let pdfData;
+            let loadedDirectly = false;
+            
+            // Step A: Load PDF bytes via dynamic local fetch (if server blocks file://, fallback dynamically)
+            loadingBar.style.width = '25%';
+            loadingPercent.innerText = '25%';
+            
+            try {
+                const response = await fetch(encodeURIComponent('690602แบบเสนอชื่อนักส่งเสริมดีเด่น ปี69 ชไมพร .pdf'));
+                if (response.ok) {
+                    const arrayBuffer = await response.arrayBuffer();
+                    pdfData = new Uint8Array(arrayBuffer);
+                    loadedDirectly = true;
+                    console.log("Loaded PDF directly via local fetch.");
+                }
+            } catch (e) {
+                console.log("Local PDF fetch blocked or failed. Falling back to pdfBase64 script source...", e);
+            }
+
+            loadingBar.style.width = '60%';
+            loadingPercent.innerText = '60%';
+
+            if (!loadedDirectly) {
+                if (typeof pdfBase64 === 'undefined') {
+                    throw new Error("PDF Base64 data variable is not loaded. Ensure pdf_data.js is present.");
+                }
+                pdfData = base64ToUint8Array(pdfBase64);
+            }
+            
+            const loadingTask = pdfjsLib.getDocument({data: pdfData});
+            pdfInstance = await loadingTask.promise;
+            totalPages = pdfInstance.numPages;
+            document.getElementById('totalPagesText').innerText = totalPages;
+            
+            const bookElement = document.getElementById('book');
+            const scale = 2.0; 
+
+            // Step B: Get base layout specs from the cover page
+            loadingBar.style.width = '80%';
+            loadingPercent.innerText = '80%';
+            
+            const firstPage = await pdfInstance.getPage(1);
+            const firstViewport = firstPage.getViewport({ scale: scale });
+            basePageWidth = firstViewport.width / scale;
+            basePageHeight = firstViewport.height / scale;
+
+            // Step C: Inject empty placeholder canvas structures instantly!
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                
+                const canvas = document.createElement('canvas');
+                canvas.id = `canvas-page-${pageNum}`;
+                canvas.width = firstViewport.width;
+                canvas.height = firstViewport.height;
+                
+                pageDiv.appendChild(canvas);
+                bookElement.appendChild(pageDiv);
+            }
+
+            buildTOCUI();
+            buildThumbnailsUI();
+
+            // Pre-render Cover and Adjacent spread immediately so they pop up on start!
+            await Promise.all([
+                renderPage(1),
+                renderPage(2),
+                renderPage(3)
+            ]);
+
+            loadingBar.style.width = '100%';
+            loadingPercent.innerText = '100%';
+
+            // Step D: Initialize the flipbook engine and reveal it in under 1 second!
+            const loader = document.getElementById('loading');
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                bookElement.style.display = 'block';
+                
+                // If mobile screen, close the default sidebar on load so book is visible
+                if (window.innerWidth <= 768) {
+                    const layout = document.getElementById('appLayout');
+                    const sbLeft = document.getElementById('sidebarLeft');
+                    if (layout) layout.classList.remove('sidebar-left-active');
+                    if (sbLeft) sbLeft.classList.remove('active');
+                }
+                
+                pageFlipInstance = new St.PageFlip(bookElement, {
+                    width: Math.round(basePageWidth),
+                    height: Math.round(basePageHeight),
+                    size: "stretch",
+                    minWidth: 280,
+                    maxWidth: 1200,
+                    minHeight: 380,
+                    maxHeight: 1600,
+                    maxShadowOpacity: 0.45,
+                    showCover: true,
+                    mobileScrollSupport: false
+                });
+
+                pageFlipInstance.loadFromHTML(document.querySelectorAll('.page'));
+                resizeBook();
+
+                // Double click to zoom in
+                const container = document.querySelector('.book-container');
+                if (container) {
+                    container.addEventListener('dblclick', () => {
+                        openZoomModal();
+                    });
+                }
+
+                // On flip, trigger lazy rendering for surrounding pages!
+                pageFlipInstance.on('flip', (e) => {
+                    currentPage = e.data + 1;
+                    document.getElementById('pageNumberInput').value = currentPage;
+                    syncActiveThumbnail();
+                    playSwooshSound();
+                    
+                    // Render current page, next page, and previous page on demand
+                    renderPage(currentPage);
+                    renderPage(currentPage - 1);
+                    renderPage(currentPage + 1);
+                    renderPage(currentPage + 2); // for spreads
+                });
+
+                pageFlipInstance.on('changeOrientation', (e) => {
+                    resizeBook();
+                });
+
+                // Run the text indexing process asynchronously in background (won't freeze screen!)
+                backgroundIndexing();
+            }, 300);
+        }
+
+        // Mathematical aspect ratio fitting calculation to completely prevent page overflowing!
+        function resizeBook() {
+            if (!pageFlipInstance) return;
+            
+            const container = document.querySelector('.book-container');
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            const pageRatio = basePageWidth / basePageHeight;
+            
+            const orientation = pageFlipInstance.getOrientation();
+            const isLandscape = orientation === 'landscape';
+            const bookRatio = isLandscape ? (2 * pageRatio) : pageRatio;
+            
+            let targetWidth, targetHeight;
+            const padX = window.innerWidth <= 768 ? 16 : 32;
+            const padY = window.innerWidth <= 768 ? 16 : 32;
+
+            if (containerWidth / containerHeight > bookRatio) {
+                targetHeight = containerHeight - padY;
+                targetWidth = targetHeight * bookRatio;
+            } else {
+                targetWidth = containerWidth - padX;
+                targetHeight = targetWidth / bookRatio;
+            }
+            
+            const bookEl = document.getElementById('book');
+            bookEl.style.width = Math.round(targetWidth) + 'px';
+            bookEl.style.height = Math.round(targetHeight) + 'px';
+            
+            pageFlipInstance.update();
+        }
+
+        window.addEventListener('resize', resizeBook);
+
+        // Construct Table of Contents Panel UI
+        function buildTOCUI() {
+            const container = document.getElementById('tocContainer');
+            container.innerHTML = '';
+            
+            tocRules.forEach(item => {
+                if (item.pageNum !== null) {
+                    const li = document.createElement('li');
+                    li.className = 'toc-item';
+                    li.onclick = () => {
+                        turnToPage(item.pageNum);
+                    };
+                    li.innerHTML = `
+                        <span class="toc-title">${item.title}</span>
+                        <span class="toc-page">หน้า ${item.pageNum}</span>
+                    `;
+                    container.appendChild(li);
+                }
+            });
+        }
+
+        // Construct Thumbnail Canvas Elements elegantly
+        function buildThumbnailsUI() {
+            const container = document.getElementById('thumbContainer');
+            container.innerHTML = '';
+            
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                const thumbItem = document.createElement('div');
+                thumbItem.className = 'thumb-item';
+                thumbItem.id = `thumb-page-${pageNum}`;
+                thumbItem.onclick = () => {
+                    turnToPage(pageNum);
+                };
+
+                const thumbCanvas = document.createElement('canvas');
+                thumbCanvas.width = 120;
+                thumbCanvas.height = 160;
+                thumbItem.appendChild(thumbCanvas);
+                
+                const span = document.createElement('span');
+                span.className = 'thumb-page';
+                span.innerText = `หน้า ${pageNum}`;
+                thumbItem.appendChild(span);
+                
+                container.appendChild(thumbItem);
+            }
+            syncActiveThumbnail();
+        }
+
+        function syncActiveThumbnail() {
+            document.querySelectorAll('.thumb-item').forEach(el => el.classList.remove('active'));
+            const activeThumb = document.getElementById(`thumb-page-${currentPage}`);
+            if (activeThumb) {
+                activeThumb.classList.add('active');
+                activeThumb.parentNode.scrollTop = activeThumb.offsetTop - activeThumb.parentNode.offsetTop - 10;
+            }
+        }
+
+        // Navigation
+        function turnToPage(pageNum) {
+            if (!pageFlipInstance) return;
+            const targetIdx = pageNum - 1;
+            if (targetIdx >= 0 && targetIdx < totalPages) {
+                pageFlipInstance.turnToPage(targetIdx);
+                
+                // On mobile, auto-close the sidebar when a page is selected
+                if (window.innerWidth <= 768) {
+                    const layout = document.getElementById('appLayout');
+                    const sbLeft = document.getElementById('sidebarLeft');
+                    const sbRight = document.getElementById('sidebarRight');
+                    const sbHelp = document.getElementById('sidebarHelp');
+                    
+                    if (layout) layout.classList.remove('sidebar-left-active', 'sidebar-right-active', 'sidebar-help-active');
+                    if (sbLeft) sbLeft.classList.remove('active');
+                    if (sbRight) sbRight.classList.remove('active');
+                    if (sbHelp) sbHelp.classList.remove('active');
+                    resizeBook();
+                }
+            }
+        }
+
+        function navFirstPage() { turnToPage(1); }
+        function navLastPage() { turnToPage(totalPages); }
+        
+        function navPrevPage() {
+            if (pageFlipInstance) pageFlipInstance.flipPrev();
+        }
+        
+        function navNextPage() {
+            if (pageFlipInstance) pageFlipInstance.flipNext();
+        }
+
+        function handlePageInputChange(input) {
+            let val = parseInt(input.value);
+            if (isNaN(val)) return;
+            if (val < 1) val = 1;
+            if (val > totalPages) val = totalPages;
+            input.value = val;
+            turnToPage(val);
+        }
+
+        // Toggle autoplay
+        function toggleAutoplay() {
+            const playSvg = document.getElementById('playIcon');
+            const pauseSvg = document.getElementById('pauseIcon');
+            
+            if (isAutoplayActive) {
+                clearInterval(autoplayTimer);
+                isAutoplayActive = false;
+                playSvg.style.display = 'block';
+                pauseSvg.style.display = 'none';
+            } else {
+                isAutoplayActive = true;
+                playSvg.style.display = 'none';
+                pauseSvg.style.display = 'block';
+                autoplayTimer = setInterval(() => {
+                    if (pageFlipInstance) {
+                        if (currentPage >= totalPages) {
+                            turnToPage(1);
+                        } else {
+                            pageFlipInstance.flipNext();
+                        }
+                    }
+                }, 4000);
+            }
+        }
+
+        // Toggle Sound Engine
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundOnIcon').style.display = soundEnabled ? 'block' : 'none';
+            document.getElementById('soundOffIcon').style.display = soundEnabled ? 'none' : 'block';
+        }
+
+        // Fullscreen Toggle controller
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Fullscreen request failed: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Theme cycle manager
+        function cycleTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            const themeName = themes[currentThemeIndex];
+            document.documentElement.setAttribute('data-theme', themeName);
+        }
+
+        // Slide Drawers Manager - Docks Left Sidebar and pushes workspace on Desktop!
+        // (Visible by default on startup!)
+        function toggleSidebar(side) {
+            const sb = document.getElementById(`sidebar${side}`);
+            const layout = document.getElementById('appLayout');
+            
+            if (sb && layout) {
+                const isActive = sb.classList.contains('active');
+                
+                document.querySelectorAll('.sidebar').forEach(el => el.classList.remove('active'));
+                layout.classList.remove('sidebar-left-active', 'sidebar-right-active', 'sidebar-help-active');
+                
+                if (!isActive) {
+                    sb.classList.add('active');
+                    if (side === 'Left') {
+                        layout.classList.add('sidebar-left-active');
+                    } else if (side === 'Right') {
+                        layout.classList.add('sidebar-right-active');
+                    } else if (side === 'Help') {
+                        layout.classList.add('sidebar-help-active');
+                    }
+                }
+                
+                resizeBook();
+                setTimeout(resizeBook, 350); 
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'TOC') {
+                event.target.classList.add('active');
+                document.getElementById('tabTOC').classList.add('active');
+            } else {
+                event.target.classList.add('active');
+                document.getElementById('tabThumbs').classList.add('active');
+            }
+        }
+
+        // Smart Thai Search Engine
+        function handleSearchKeyUp(e) {
+            if (e.key === 'Enter') performSearch();
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            const resultsContainer = document.getElementById('searchResults');
+            const statusEl = document.getElementById('searchStatus');
+            resultsContainer.innerHTML = '';
+            
+            if (!query) {
+                statusEl.innerText = "กรุณาใส่คำค้นหา";
+                return;
+            }
+
+            statusEl.innerText = "กำลังค้นหา...";
+            
+            const results = [];
+            const regex = new RegExp(`(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+
+            pageSearchIndex.forEach(item => {
+                if (regex.test(item.text)) {
+                    const matchIdx = item.text.toLowerCase().indexOf(query.toLowerCase());
+                    const startIdx = Math.max(0, matchIdx - 35);
+                    const endIdx = Math.min(item.text.length, matchIdx + query.length + 35);
+                    let snippet = item.text.substring(startIdx, endIdx);
+                    
+                    if (startIdx > 0) snippet = '...' + snippet;
+                    if (endIdx < item.text.length) snippet = snippet + '...';
+
+                    const highlightedSnippet = snippet.replace(regex, '<mark>$1</mark>');
+
+                    results.push({
+                        pageNum: item.pageNum,
+                        snippet: highlightedSnippet
+                    });
+                }
+            });
+
+            if (results.length === 0) {
+                statusEl.innerText = "❌ ไม่พบคำที่ค้นหา";
+            } else {
+                statusEl.innerText = `🟢 พบผลลัพธ์ทั้งหมด ${results.length} หน้า`;
+                results.forEach(res => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'search-item';
+                    itemDiv.onclick = () => {
+                        turnToPage(res.pageNum);
+                        toggleSidebar('Right');
+                    };
+                    itemDiv.innerHTML = `
+                        <div class="search-item-header">
+                            <span>หน้าแนะนำ</span>
+                            <span class="search-item-page">หน้า ${res.pageNum}</span>
+                        </div>
+                        <div class="search-item-snippet">${res.snippet}</div>
+                    `;
+                    resultsContainer.appendChild(itemDiv);
+                });
+            }
+        }
+
+        // VECTOR ZOOM SYSTEM
+        let zoomScale = 1.5;
+        let isDraggingZoom = false;
+        let startZoomX = 0, startZoomY = 0;
+        let scrollZoomLeft = 0, scrollZoomTop = 0;
+
+        async function openZoomModal() {
+            const overlay = document.getElementById('zoomOverlay');
+            overlay.style.display = 'flex';
+            zoomReset();
+            renderZoomCanvas(currentPage);
+        }
+
+        function closeZoomModal() {
+            document.getElementById('zoomOverlay').style.display = 'none';
+        }
+
+        async function renderZoomCanvas(pageNum) {
+            const canvas = document.getElementById('zoomCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const page = await pdfInstance.getPage(pageNum);
+            const highResViewport = page.getViewport({ scale: 3.5 }); 
+
+            canvas.width = highResViewport.width;
+            canvas.height = highResViewport.height;
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: highResViewport
+            };
+
+            await page.render(renderContext).promise;
+            applyZoomStyles();
+        }
+
+        function applyZoomStyles() {
+            const canvas = document.getElementById('zoomCanvas');
+            canvas.style.transform = `scale(${zoomScale})`;
+            document.getElementById('zoomValueText').innerText = Math.round(zoomScale * 100) + '%';
+        }
+
+        document.getElementById('zoomContainer').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.15 : 0.15;
+            zoomAdjust(delta);
+        });
+
+        function zoomAdjust(amount) {
+            zoomScale += amount;
+            if (zoomScale < 0.8) zoomScale = 0.8;
+            if (zoomScale > 3.0) zoomScale = 3.0;
+            applyZoomStyles();
+        }
+
+        // Reset zoom viewport coordinates
+        function zoomReset() {
+            zoomScale = 1.2;
+            applyZoomStyles();
+            const container = document.getElementById('zoomContainer');
+            container.scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
+            container.scrollTop = (container.scrollHeight - container.clientHeight) / 2;
+        }
+
+        const zContainer = document.getElementById('zoomContainer');
+        zContainer.addEventListener('mousedown', (e) => {
+            isDraggingZoom = true;
+            zContainer.classList.add('grabbing');
+            startZoomX = e.pageX - zContainer.offsetLeft;
+            startZoomY = e.pageY - zContainer.offsetTop;
+            scrollZoomLeft = zContainer.scrollLeft;
+            scrollZoomTop = zContainer.scrollTop;
+        });
+
+        zContainer.addEventListener('mousemove', (e) => {
+            if (!isDraggingZoom) return;
+            e.preventDefault();
+            const x = e.pageX - zContainer.offsetLeft;
+            const y = e.pageY - zContainer.offsetTop;
+            const walkX = (x - startZoomX) * 1.5; 
+            const walkY = (y - startZoomY) * 1.5;
+            zContainer.scrollLeft = scrollZoomLeft - walkX;
+            zContainer.scrollTop = scrollZoomTop - walkY;
+        });
+
+        const stopDrag = () => {
+            isDraggingZoom = false;
+            zContainer.classList.remove('grabbing');
+        };
+        zContainer.addEventListener('mouseup', stopDrag);
+        zContainer.addEventListener('mouseleave', stopDrag);
+
+        // Touch support for zoom panning on mobile
+        zContainer.addEventListener('touchstart', (e) => {
+            isDraggingZoom = true;
+            zContainer.classList.add('grabbing');
+            const touch = e.touches[0];
+            startZoomX = touch.pageX - zContainer.offsetLeft;
+            startZoomY = touch.pageY - zContainer.offsetTop;
+            scrollZoomLeft = zContainer.scrollLeft;
+            scrollZoomTop = zContainer.scrollTop;
+        }, { passive: true });
+
+        zContainer.addEventListener('touchmove', (e) => {
+            if (!isDraggingZoom) return;
+            const touch = e.touches[0];
+            const x = touch.pageX - zContainer.offsetLeft;
+            const y = touch.pageY - zContainer.offsetTop;
+            const walkX = (x - startZoomX) * 1.5; 
+            const walkY = (y - startZoomY) * 1.5;
+            zContainer.scrollLeft = scrollZoomLeft - walkX;
+            zContainer.scrollTop = scrollZoomTop - walkY;
+        }, { passive: true });
+
+        zContainer.addEventListener('touchend', stopDrag);
+
+        // SHARE MODAL & PUBLIC METRICS
+        function openShareModal() {
+            const modal = document.getElementById('shareModal');
+            modal.style.display = 'flex';
+            
+            const currentUrl = window.location.href;
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}" alt="QR Code Share">`;
+            
+            // Check if URL is local
+            const warningEl = document.getElementById('shareWarning');
+            if (warningEl) {
+                if (window.location.protocol === 'file:') {
+                    warningEl.style.display = 'block';
+                } else {
+                    warningEl.style.display = 'none';
+                }
+            }
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').style.display = 'none';
+        }
+
+        function copyLink() {
+            const link = window.location.href;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("📋 คัดลอกลิงก์ E-Book เรียบร้อยแล้ว! สามารถส่งแชร์ให้ผู้ใช้รายอื่นได้ทันที");
+            }).catch(err => {
+                console.error("Clipboard copy failed: ", err);
+            });
+        }
+
+        // Triggers original PDF download
+        function downloadOriginalPDF() {
+            try {
+                let pdfBytes;
+                if (typeof pdfBase64 !== 'undefined') {
+                    pdfBytes = base64ToUint8Array(pdfBase64);
+                }
+                if (pdfBytes) {
+                    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = '690602แบบเสนอชื่อนักส่งเสริมดีเด่น ปี69 ชไมพร.pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = '690602แบบเสนอชื่อนักส่งเสริมดีเด่น ปี69 ชไมพร .pdf'; 
+                    link.download = '690602แบบเสนอชื่อนักส่งเสริมดีเด่น ปี69 ชไมพร .pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            } catch (err) {
+                console.error("PDF download failed, trying fallback: ", err);
+                const link = document.createElement('a');
+                link.href = '690602แบบเสนอชื่อนักส่งเสริมดีเด่น ปี69 ชไมพร .pdf'; 
+                link.download = '690602แบบเสนอชื่อนักส่งเสริมดีเด่น ปี69 ชไมพร .pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Keyboard navigation events handler
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'INPUT') return;
+            
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navNextPage();
+            } else if (e.key === 'ArrowLeft') {
+                navPrevPage();
+            } else if (e.key === 'Home') {
+                navFirstPage();
+            } else if (e.key === 'End') {
+                navLastPage();
+            }
+        });
+
+        // Trigger startup
+        initFlipbook().catch(err => {
+            console.error(err);
+            document.getElementById('loading').innerHTML = `
+                <div style="color:#ef4444; font-size:24px; font-weight:bold; margin-bottom:12px;">เกิดข้อผิดพลาดในการโหลดระบบ</div>
+                <div style="color:#cbd5e1; max-width:400px; text-align:center;">ไม่สามารถเริ่มต้นเอกสารนี้ได้ กรุณาตรวจสอบไฟล์ข้อมูลของคุณอีกครั้ง</div>
+            `;
+        });
+    </script>
+</body>
+</html>
