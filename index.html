@@ -1373,6 +1373,7 @@
                     container.addEventListener('dblclick', () => {
                         openZoomModal();
                     });
+                    initMobileTapNavigation();
                 }
 
                 // On flip, trigger lazy rendering for surrounding pages!
@@ -1642,6 +1643,68 @@
             document.addEventListener('click', startMusic);
             document.addEventListener('keydown', startMusic);
             document.addEventListener('touchstart', startMusic, { passive: true });
+        }
+
+        // Touch tap navigation and disable touch dragging on mobile
+        function initMobileTapNavigation() {
+            const container = document.querySelector('.book-container');
+            if (!container) return;
+
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartTime = 0;
+
+            // 1. Prevent default touchmove to block swipe dragging on mobile
+            container.addEventListener('touchmove', (e) => {
+                const target = e.target;
+                // Only block if not on interactive UI overlays
+                if (!target.closest('.sidebar') && !target.closest('.control-bar') && !target.closest('.modal-overlay') && !target.closest('.zoom-controls')) {
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+
+            // 2. Track touch points to register click/taps
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                const touch = e.touches[0];
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                touchStartTime = Date.now();
+            }, { passive: true });
+
+            container.addEventListener('touchend', (e) => {
+                if (e.changedTouches.length !== 1) return;
+
+                const target = e.target;
+                // Exclude any button/menu/input/sidebar touches
+                if (target.closest('button') || target.closest('input') || target.closest('select') || 
+                    target.closest('.sidebar') || target.closest('.control-bar') || 
+                    target.closest('.modal-overlay') || target.closest('.zoom-controls')) {
+                    return;
+                }
+
+                const touch = e.changedTouches[0];
+                const deltaX = touch.clientX - touchStartX;
+                const deltaY = touch.clientY - touchStartY;
+                const duration = Date.now() - touchStartTime;
+
+                // Thresholds for a quick, stable touch-tap (under 250ms, less than 15px drift)
+                if (duration < 250 && Math.abs(deltaX) < 15 && Math.abs(deltaY) < 15) {
+                    const rect = container.getBoundingClientRect();
+                    const tapX = touch.clientX - rect.left;
+                    const containerWidth = rect.width;
+
+                    if (tapX > containerWidth / 2) {
+                        // Right half -> Next page
+                        navNextPage();
+                    } else {
+                        // Left half -> Previous page
+                        navPrevPage();
+                    }
+                }
+            }, { passive: true });
         }
 
         // Fullscreen Toggle controller
