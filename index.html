@@ -976,6 +976,12 @@
                     <svg id="soundOffIcon" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
                 </button>
 
+                <!-- Background Music Toggle -->
+                <button class="btn-control" id="btnMusic" title="เปิดเพลงประกอบ" onclick="toggleMusic()">
+                    <svg id="musicOnIcon" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    <svg id="musicOffIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13M3 3l18 18"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                </button>
+
                 <!-- Dynamic Vector Zoom Tool -->
                 <button class="btn-control" title="ซูมขยายคมชัด" onclick="openZoomModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/></svg>
@@ -1083,6 +1089,9 @@
         </div>
     </div>
 
+    <!-- Background Music Audio Element -->
+    <audio id="bgMusic" src="sound.mp3" loop preload="metadata"></audio>
+
     <!-- Load the pre-encoded PDF Base64 string fallback -->
     <script src="pdf_data.js"></script>
 
@@ -1097,6 +1106,7 @@
         let isAutoplayActive = false;
         let autoplayTimer = null;
         let soundEnabled = true;
+        let musicPlaying = false;
         let currentThemeIndex = 0;
         const themes = ['midnight', 'walnut', 'emerald', 'alabaster'];
         
@@ -1378,6 +1388,7 @@
 
                 // Run the text indexing process asynchronously in background (won't freeze screen!)
                 backgroundIndexing();
+                initMusicAutoplay();
             }, 300);
         }
 
@@ -1548,6 +1559,52 @@
             soundEnabled = !soundEnabled;
             document.getElementById('soundOnIcon').style.display = soundEnabled ? 'block' : 'none';
             document.getElementById('soundOffIcon').style.display = soundEnabled ? 'none' : 'block';
+        }
+
+        // Toggle Background Music
+        function toggleMusic() {
+            const music = document.getElementById('bgMusic');
+            const onIcon = document.getElementById('musicOnIcon');
+            const offIcon = document.getElementById('musicOffIcon');
+            const btn = document.getElementById('btnMusic');
+            
+            if (musicPlaying) {
+                music.pause();
+                musicPlaying = false;
+                onIcon.style.display = 'none';
+                offIcon.style.display = 'block';
+                btn.title = 'เปิดเพลงประกอบ';
+            } else {
+                music.play().then(() => {
+                    musicPlaying = true;
+                    onIcon.style.display = 'block';
+                    offIcon.style.display = 'none';
+                    btn.title = 'ปิดเพลงประกอบ';
+                }).catch(err => {
+                    console.warn("Music playback prevented: ", err);
+                });
+            }
+        }
+
+        // Auto-play music on first user interaction
+        function initMusicAutoplay() {
+            const startMusic = () => {
+                const music = document.getElementById('bgMusic');
+                if (!musicPlaying) {
+                    music.play().then(() => {
+                        musicPlaying = true;
+                        document.getElementById('musicOnIcon').style.display = 'block';
+                        document.getElementById('musicOffIcon').style.display = 'none';
+                        document.getElementById('btnMusic').title = 'ปิดเพลงประกอบ';
+                    }).catch(err => {
+                        console.log("Autoplay blocked by browser. User must click the music button to start.", err);
+                    });
+                }
+                document.removeEventListener('click', startMusic);
+                document.removeEventListener('keydown', startMusic);
+            };
+            document.addEventListener('click', startMusic);
+            document.addEventListener('keydown', startMusic);
         }
 
         // Fullscreen Toggle controller
